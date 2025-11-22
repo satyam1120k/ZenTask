@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Diagnostic</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .status { padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .pending { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        code { background: #f8f9fa; padding: 2px 5px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Firebase Connection Diagnostic</h1>
+    <div id="status" class="status pending">Initializing...</div>
+    <div id="details"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYiuBDcUZGdvUEkIPaN8GJMhIxiLvfrrg",
+            authDomain: "bppv-13cd9.firebaseapp.com",
+            databaseURL: "https://bppv-13cd9-default-rtdb.firebaseio.com",
+            projectId: "bppv-13cd9",
+            storageBucket: "bppv-13cd9.firebasestorage.app",
+            messagingSenderId: "938954716366",
+            appId: "1:938954716366:web:d71bbe80e49d79140c8c9f",
+            measurementId: "G-DPXCMNH3FZ"
+        };
+
+        const statusDiv = document.getElementById('status');
+        const detailsDiv = document.getElementById('details');
+
+        function log(message, isError = false) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            if (isError) p.style.color = 'red';
+            detailsDiv.appendChild(p);
+            console.log(message);
+        }
+
+        async function runDiagnostic() {
+            try {
+                log("Initializing Firebase...");
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                log("Firebase initialized.");
+
+                log("Attempting to READ from 'tasks' collection...");
+                const querySnapshot = await getDocs(collection(db, "tasks"));
+                log(`READ SUCCESS! Found ${querySnapshot.size} documents.`);
+
+                log("Attempting to WRITE to 'tasks' collection...");
+                const docRef = await addDoc(collection(db, "tasks"), {
+                    title: "Diagnostic Test Task",
+                    createdAt: Date.now(),
+                    type: "diagnostic"
+                });
+                log(`WRITE SUCCESS! Document ID: ${docRef.id}`);
+
+                statusDiv.textContent = "✅ CONNECTION SUCCESSFUL";
+                statusDiv.className = "status success";
+                log("Your Firebase connection is working perfectly.");
+
+            } catch (error) {
+                statusDiv.textContent = "❌ CONNECTION FAILED";
+                statusDiv.className = "status error";
+                
+                log("ERROR DETAILS:", true);
+                log(`Code: ${error.code}`, true);
+                log(`Message: ${error.message}`, true);
+                
+                if (error.code === 'permission-denied') {
+                    log("DIAGNOSIS: This is a PERMISSION issue. Check your Firestore Security Rules.", true);
+                } else if (error.code === 'unavailable') {
+                    log("DIAGNOSIS: This is a NETWORK issue. Check your internet connection or firewall.", true);
+                }
+            }
+        }
+
+        runDiagnostic();
+    </script>
+</body>
+</html>
