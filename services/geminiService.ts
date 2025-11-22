@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { Task } from "../types";
 
-const apiKey = process.env.API_KEY || '';
+const apiKey = import.meta.env.VITE_GOOGLE_API_KEY || '';
 
 // Initialize safely, even if key is missing (handled in UI)
 let ai: GoogleGenAI | null = null;
@@ -13,7 +13,7 @@ export const getTaskInsights = async (tasks: Task[]): Promise<string> => {
   if (!ai) return "API Key not configured.";
   if (tasks.length === 0) return "Add some tasks to get started!";
 
-  const taskSummary = tasks.map(t => 
+  const taskSummary = tasks.map(t =>
     `- ${t.title} (${t.completed ? 'Completed' : 'Pending'})`
   ).join('\n');
 
